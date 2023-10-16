@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://bj8jpdbir5fp"]
+
+[ext_resource type="Script" path="res://Player.gd" id="1_lii88"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8ndic"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vgu2v"]
+size = Vector2(14, 20)
+
+[node name="Player" type="Sprite2D"]
+position = Vector2(75, 38)
+script = ExtResource("1_lii88")
+metadata/_edit_group_ = true
+
+[node name="Animation" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_8ndic")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_vgu2v")
