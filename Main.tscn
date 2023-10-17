@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://baixa4dlhlrbo"]
+
+[ext_resource type="PackedScene" uid="uid://bj8jpdbir5fp" path="res://Player.tscn" id="1_add03"]
+[ext_resource type="PackedScene" uid="uid://ckahqk06844lm" path="res://Map.tscn" id="2_ikaeo"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_add03")]
+position = Vector2(396, 65)
+MAX_SPEED = null
+JUMP_V0 = null
+FALL_GRAVITY_MULTIPLIER = null
+g = null
+
+[node name="Map" parent="." instance=ExtResource("2_ikaeo")]
