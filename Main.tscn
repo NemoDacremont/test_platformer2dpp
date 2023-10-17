@@ -7,9 +7,5 @@
 
 [node name="Player" parent="." instance=ExtResource("1_add03")]
 position = Vector2(396, 65)
-MAX_SPEED = null
-JUMP_V0 = null
-FALL_GRAVITY_MULTIPLIER = null
-g = null
 
 [node name="Map" parent="." instance=ExtResource("2_ikaeo")]
