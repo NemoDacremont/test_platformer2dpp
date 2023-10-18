@@ -78,8 +78,11 @@ func _process(delta):
 	# print(is_on_floor())
 	print(velocity.y)
 
+	process_inputs()
+	process_state()
 
-	integrate_movement_verlet(delta)
+
+	process_physics(delta)
 	move_and_slide()
 
 
