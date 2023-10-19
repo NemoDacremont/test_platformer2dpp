@@ -191,4 +191,9 @@ sprite_frames = SubResource("SpriteFrames_4bona")
 animation = &"Jump"
 autoplay = "Idle"
 
+[node name="Wall_Jump_Timer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
 [connection signal="timeout" from="Action_Buffer_Timer" to="." method="_on_action_buffer_timer_timeout"]
+[connection signal="timeout" from="Wall_Jump_Timer" to="." method="_on_wall_jump_timer_timeout"]
