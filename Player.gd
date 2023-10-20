@@ -7,15 +7,25 @@ const JUMP_ACTION_NAME = "Jump"
 const MOVE_LEFT_ACTION_NAME = "Move_Left"
 const MOVE_RIGHT_ACTION_NAME = "Move_Right"
 
+# States
 enum States {JUMP, IDLE, WALL_JUMP, DEFAULT=IDLE}
 const STATES_ACTION_NAMES = [JUMP_ACTION_NAME, IDLE_ACTION_NAME, "Wall_Jump"]
 
+# Actions
 var action_buffer: States = States.DEFAULT
-var action_buffer_timer: Timer;
 const ACTION_BUFFER_TIMER_DURATION = 0.1
+const COYOTE_JUMP_DURATION = 0.1
+const COYOTE_JUMP_EPSILON = 5
+var is_coyote_available = false
 
 var next_action: States = States.DEFAULT
 var is_action_busy: bool = true
+
+# Nodes
+var action_buffer_timer: Timer;
+var wall_jump_timer: Timer
+var animation_node: AnimatedSprite2D
+var coyote_jump_node: Timer
 
 @export var is_falling: bool = false
 var is_wall_jumping: bool = false
@@ -25,50 +35,60 @@ var is_jumping: bool = false
 
 #Physics
 @export var g: float = 980
-@export var MAX_SPEED: float = 200.0
-@export var JUMP_V0: float = -g / 2
+# v = 0 <=> t_max = v_0 / g, y(t_max) = v_0 ** 2 / (2 * g)
+# tile_height = 18px, jump 5 -> v_0 = sqrt(2 * g * 5 * tile_height)
+const TILE_HEIGHT = 18
+const TILE_WIDTH = 18
+const JUMP_TILE_HEIGHT_MULTIPLIER = 5
+const JUMP_TILE_WIDTH_MULTIPLIER = 12
+@export var JUMP_V0: float = -sqrt(2.0 * g * JUMP_TILE_HEIGHT_MULTIPLIER * TILE_HEIGHT)
 @export var FALL_GRAVITY_MULTIPLIER: float = 2
 
-var wall_jump_timer: Timer
+# Store the velocity of last cycle
+var last_velocity: Vector2 = Vector2.ZERO
+
 const WALL_JUMP_TIMER_DIRATION = 0.1
 var WALL_JUMP_VY = -g / 3
+
+# x(t_max) = azy de tête c cho (à calibrer)
+@export var MAX_SPEED: float = TILE_WIDTH * JUMP_TILE_WIDTH_MULTIPLIER * 2
 
 # 1 vingtième de seconde avant d'être à vitesse maximale
 var time_full_speed: float = 1.0 / 20.0
 var accel_x: float = MAX_SPEED / time_full_speed
+
+var acceleration: Vector2 = Vector2(0, g)
+
+##
+## Tests frottements
+##
+# 3 pour atteindre 3 t_0 (95% du régime transitoire)
+var f = 1 / time_full_speed
+
+
+##
 
 # Animations
 const JUMP_ANIMATION_NAME: String = "Jump"
 const IDLE_ANIMATION_NAME: String = "Idle"
 const WALK_ANIMATION_NAME: String = "Walk"
 
-var animation_node: AnimatedSprite2D
-
-
-var acceleration: Vector2 = Vector2(0, g)
-
-
-
-##
-## Tests frottements
-##
-var f = 30
-
-
-##
-
-
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	velocity = Vector2.ZERO
 	action_buffer_timer = $Action_Buffer_Timer
 	animation_node = $Animations
 	wall_jump_timer = $Wall_Jump_Timer
+	coyote_jump_node = $Coyote_Jump_Timer
 
 ## Animations
 func process_animations():
 	# Flip according to direction
-	animation_node.flip_h = velocity.x < 0
+	if (velocity.x < 0):
+		animation_node.flip_h = true
+	if (velocity.x > 0):
+		animation_node.flip_h = false
 
 
 	if (is_falling):
@@ -135,6 +155,12 @@ func process_inputs():
 # related to player's inputs
 func process_state():
 	is_falling = false
+
+	if (abs(last_velocity.y) <= COYOTE_JUMP_EPSILON && abs(velocity.y) >= COYOTE_JUMP_EPSILON):
+		is_coyote_available = true
+		print("Coyote Available")
+		coyote_jump_node.start()
+
 	
 	if (velocity.y > 0):
 		is_falling = true
@@ -143,11 +169,18 @@ func process_state():
 func jump():
 	is_jumping = true
 	velocity.y = JUMP_V0
+	print(JUMP_V0)
 
 
 func wall_jump():
 	velocity.y = JUMP_V0
-	velocity.x = -MAX_SPEED
+
+	# eps = 1 si on va vers la gauche, -1 sinon (va dans la direction opposé de la direction)
+	var eps = 1
+	if (is_moving_right):  # va vers la droite
+		eps = -1
+
+	velocity.x = eps * MAX_SPEED
 	is_wall_jumping = true
 	wall_jump_timer.start(WALL_JUMP_TIMER_DIRATION)
 
@@ -155,7 +188,7 @@ func wall_jump():
 func process_action():
 	match next_action:
 		States.JUMP:
-			if (is_on_floor()):
+			if (is_on_floor() or is_coyote_available):
 				jump()
 		States.WALL_JUMP:
 			if (is_on_wall_only()):
@@ -169,7 +202,6 @@ func process_action():
 ## Physics
 # Handles 
 func process_physics(delta: float):
-
 	process_action()
 
 	acceleration.x = 0
@@ -187,7 +219,7 @@ func process_physics(delta: float):
 		acceleration.y = g * FALL_GRAVITY_MULTIPLIER
 
 	
-
+	last_velocity = velocity
 	if not is_on_floor():
 		velocity.y += acceleration.y * delta
 
@@ -195,7 +227,9 @@ func process_physics(delta: float):
 	if (acceleration.x == 0 && not is_wall_jumping):
 		velocity.x *= time_full_speed * delta
 
-	velocity.x = acceleration.x * delta + velocity.x * (1 - f * delta)
+	if (not is_wall_jumping):
+		velocity.x = acceleration.x * delta + velocity.x * (1 - f * delta)
+
 	# if (is_jumping):
 	# 	position += velocity * delta + acceleration * (delta ** 2) / 2
 
@@ -226,4 +260,9 @@ func _on_action_buffer_timer_timeout():
 func _on_wall_jump_timer_timeout():
 	print("Wall jump timeout")
 	is_wall_jumping = false
+
+
+func _on_coyote_jump_timer_timeout():
+	print("timeout coyote")
+	is_coyote_available = false
 

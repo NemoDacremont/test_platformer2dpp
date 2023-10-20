@@ -195,5 +195,10 @@ autoplay = "Idle"
 wait_time = 0.2
 one_shot = true
 
+[node name="Coyote_Jump_Timer" type="Timer" parent="."]
+wait_time = 0.05
+one_shot = true
+
 [connection signal="timeout" from="Action_Buffer_Timer" to="." method="_on_action_buffer_timer_timeout"]
 [connection signal="timeout" from="Wall_Jump_Timer" to="." method="_on_wall_jump_timer_timeout"]
+[connection signal="timeout" from="Coyote_Jump_Timer" to="." method="_on_coyote_jump_timer_timeout"]
