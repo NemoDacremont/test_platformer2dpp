@@ -40,7 +40,7 @@ var is_jumping: bool = false
 const TILE_HEIGHT = 18
 const TILE_WIDTH = 18
 const JUMP_TILE_HEIGHT_MULTIPLIER = 5
-const JUMP_TILE_WIDTH_MULTIPLIER = 12
+const JUMP_TILE_WIDTH_MULTIPLIER = 8
 @export var JUMP_V0: float = -sqrt(2.0 * g * JUMP_TILE_HEIGHT_MULTIPLIER * TILE_HEIGHT)
 @export var FALL_GRAVITY_MULTIPLIER: float = 2
 
@@ -50,8 +50,7 @@ var last_velocity: Vector2 = Vector2.ZERO
 const WALL_JUMP_TIMER_DIRATION = 0.1
 var WALL_JUMP_VY = -g / 3
 
-# x(t_max) = azy de tête c cho (à calibrer)
-@export var MAX_SPEED: float = TILE_WIDTH * JUMP_TILE_WIDTH_MULTIPLIER * 2
+@export var MAX_SPEED: float = JUMP_TILE_WIDTH_MULTIPLIER * TILE_WIDTH * g / abs(JUMP_V0)
 
 # 1 vingtième de seconde avant d'être à vitesse maximale
 var time_full_speed: float = 1.0 / 20.0
@@ -72,6 +71,8 @@ var f = 1 / time_full_speed
 const JUMP_ANIMATION_NAME: String = "Jump"
 const IDLE_ANIMATION_NAME: String = "Idle"
 const WALK_ANIMATION_NAME: String = "Walk"
+const JUMP_MID_JUMP_ANIMATION_EPSILON = 100
+
 
 
 # Called when the node enters the scene tree for the first time.
@@ -82,6 +83,9 @@ func _ready():
 	wall_jump_timer = $Wall_Jump_Timer
 	coyote_jump_node = $Coyote_Jump_Timer
 
+	print("JUMP_V0: ", JUMP_V0)
+	print("MAX_SPEED: ", MAX_SPEED)
+
 ## Animations
 func process_animations():
 	# Flip according to direction
@@ -90,10 +94,17 @@ func process_animations():
 	if (velocity.x > 0):
 		animation_node.flip_h = false
 
+	# If at the top if the jump
+	if ((is_jumping || is_falling) && abs(velocity.y) < JUMP_MID_JUMP_ANIMATION_EPSILON):
+		animation_node.play(JUMP_ANIMATION_NAME)
+		animation_node.frame = 1
+		return
+
 
 	if (is_falling):
 		animation_node.play(JUMP_ANIMATION_NAME)
 		animation_node.frame = 2
+
 		return
 
 
@@ -122,7 +133,6 @@ func process_inputs():
 		if (is_on_floor()):
 			action_buffer_timer.stop()
 			is_jumping = false
-			print("Reach floor and action_buffer=", action_buffer)
 			next_action = action_buffer
 			action_buffer = States.DEFAULT
 
@@ -158,7 +168,6 @@ func process_state():
 
 	if (abs(last_velocity.y) <= COYOTE_JUMP_EPSILON && abs(velocity.y) >= COYOTE_JUMP_EPSILON):
 		is_coyote_available = true
-		print("Coyote Available")
 		coyote_jump_node.start()
 
 	
@@ -174,6 +183,7 @@ func jump():
 
 func wall_jump():
 	velocity.y = JUMP_V0
+	is_jumping = true
 
 	# eps = 1 si on va vers la gauche, -1 sinon (va dans la direction opposé de la direction)
 	var eps = 1
@@ -258,11 +268,9 @@ func _on_action_buffer_timer_timeout():
 
 
 func _on_wall_jump_timer_timeout():
-	print("Wall jump timeout")
 	is_wall_jumping = false
 
 
 func _on_coyote_jump_timer_timeout():
-	print("timeout coyote")
 	is_coyote_available = false
 

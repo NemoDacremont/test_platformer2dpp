@@ -1,9 +1,11 @@
-[gd_scene load_steps=28 format=3 uid="uid://bj8jpdbir5fp"]
+[gd_scene load_steps=39 format=3 uid="uid://bj8jpdbir5fp"]
 
 [ext_resource type="Script" path="res://Player.gd" id="1_lii88"]
 [ext_resource type="Texture2D" uid="uid://cl4qaiwfrfnkh" path="res://assets/Asset_Pack_random_char/Asset Pack-V1/Sprite Sheets/Character Idle 48x48.png" id="2_psu1t"]
 [ext_resource type="Texture2D" uid="uid://3xf0ig117fbo" path="res://assets/Asset_Pack_random_char/Asset Pack-V1/Sprite Sheets/player jump 48x48.png" id="3_kiyyb"]
 [ext_resource type="Texture2D" uid="uid://b40po52fa84yr" path="res://assets/Asset_Pack_random_char/Asset Pack-V1/Sprite Sheets/run cycle 48x48.png" id="4_veoxh"]
+[ext_resource type="Texture2D" uid="uid://lpwlq4jontaq" path="res://assets/Asset_Pack_random_char/Asset Pack-V1/Sprite Sheets/wall land 48x48.png" id="5_mar82"]
+[ext_resource type="Texture2D" uid="uid://su6pef4tiptd" path="res://assets/Asset_Pack_random_char/Asset Pack-V1/Sprite Sheets/Wall Slide 48x48.png" id="6_3dalt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vgu2v"]
 size = Vector2(18, 29)
@@ -92,6 +94,42 @@ region = Rect2(288, 0, 48, 48)
 atlas = ExtResource("4_veoxh")
 region = Rect2(336, 0, 48, 48)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_g88u4"]
+atlas = ExtResource("5_mar82")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d00av"]
+atlas = ExtResource("5_mar82")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2mra5"]
+atlas = ExtResource("5_mar82")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qdejc"]
+atlas = ExtResource("5_mar82")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4t173"]
+atlas = ExtResource("5_mar82")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5qgtr"]
+atlas = ExtResource("5_mar82")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n85i3"]
+atlas = ExtResource("6_3dalt")
+region = Rect2(0, 0, 46, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q4ubp"]
+atlas = ExtResource("6_3dalt")
+region = Rect2(46, 0, 46, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3c17n"]
+atlas = ExtResource("6_3dalt")
+region = Rect2(92, 0, 46, 48)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_4bona"]
 animations = [{
 "frames": [{
@@ -171,6 +209,43 @@ animations = [{
 "loop": true,
 "name": &"Walk",
 "speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g88u4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d00av")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2mra5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qdejc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4t173")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5qgtr")
+}],
+"loop": true,
+"name": &"Wall_Land",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n85i3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q4ubp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3c17n")
+}],
+"loop": false,
+"name": &"Wall_Slide",
+"speed": 5.0
 }]
 
 [node name="Player" type="CharacterBody2D"]
@@ -188,7 +263,7 @@ one_shot = true
 
 [node name="Animations" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_4bona")
-animation = &"Jump"
+animation = &"Wall_Land"
 autoplay = "Idle"
 
 [node name="Wall_Jump_Timer" type="Timer" parent="."]
@@ -199,6 +274,9 @@ one_shot = true
 wait_time = 0.05
 one_shot = true
 
+[node name="Wall_Land_Timer" type="Timer" parent="."]
+
 [connection signal="timeout" from="Action_Buffer_Timer" to="." method="_on_action_buffer_timer_timeout"]
 [connection signal="timeout" from="Wall_Jump_Timer" to="." method="_on_wall_jump_timer_timeout"]
 [connection signal="timeout" from="Coyote_Jump_Timer" to="." method="_on_coyote_jump_timer_timeout"]
+[connection signal="timeout" from="Wall_Land_Timer" to="." method="_on_wall_land_timer_timeout"]
