@@ -266,17 +266,21 @@ sprite_frames = SubResource("SpriteFrames_4bona")
 animation = &"Wall_Land"
 autoplay = "Idle"
 
-[node name="Wall_Jump_Timer" type="Timer" parent="."]
-wait_time = 0.2
-one_shot = true
-
 [node name="Coyote_Jump_Timer" type="Timer" parent="."]
 wait_time = 0.05
 one_shot = true
 
 [node name="Wall_Land_Timer" type="Timer" parent="."]
 
+[node name="Left_Wall_Jump_Timer" type="Timer" parent="."]
+wait_time = 0.3
+
+[node name="Right_Wall_Jump_Timer" type="Timer" parent="."]
+wait_time = 0.3
+one_shot = true
+
 [connection signal="timeout" from="Action_Buffer_Timer" to="." method="_on_action_buffer_timer_timeout"]
-[connection signal="timeout" from="Wall_Jump_Timer" to="." method="_on_wall_jump_timer_timeout"]
 [connection signal="timeout" from="Coyote_Jump_Timer" to="." method="_on_coyote_jump_timer_timeout"]
 [connection signal="timeout" from="Wall_Land_Timer" to="." method="_on_wall_land_timer_timeout"]
+[connection signal="timeout" from="Left_Wall_Jump_Timer" to="." method="_on_left_wall_jump_timer_timeout"]
+[connection signal="timeout" from="Right_Wall_Jump_Timer" to="." method="_on_right_wall_jump_timer_timeout"]

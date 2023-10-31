@@ -23,12 +23,15 @@ var is_action_busy: bool = true
 
 # Nodes
 var action_buffer_timer: Timer;
-var wall_jump_timer: Timer
+var left_wall_jump_timer: Timer
+var right_wall_jump_timer: Timer
 var animation_node: AnimatedSprite2D
 var coyote_jump_node: Timer
 
 @export var is_falling: bool = false
+var is_right_wall_jumping: bool = false
 var is_wall_jumping: bool = false
+var is_left_wall_jumping: bool = false
 var is_moving_right: bool = false
 var is_moving_left: bool = false
 var is_jumping: bool = false
@@ -40,14 +43,15 @@ var is_jumping: bool = false
 const TILE_HEIGHT = 18
 const TILE_WIDTH = 18
 const JUMP_TILE_HEIGHT_MULTIPLIER = 5
-const JUMP_TILE_WIDTH_MULTIPLIER = 8
+const JUMP_TILE_WIDTH_MULTIPLIER = 5
 @export var JUMP_V0: float = -sqrt(2.0 * g * JUMP_TILE_HEIGHT_MULTIPLIER * TILE_HEIGHT)
 @export var FALL_GRAVITY_MULTIPLIER: float = 2
 
 # Store the velocity of last cycle
 var last_velocity: Vector2 = Vector2.ZERO
 
-const WALL_JUMP_TIMER_DIRATION = 0.1
+const RIGHT_WALL_JUMP_TIMER_DURATION = 0.1
+const LEFT_WALL_JUMP_TIMER_DURATION = 0.1
 var WALL_JUMP_VY = -g / 3
 
 @export var MAX_SPEED: float = JUMP_TILE_WIDTH_MULTIPLIER * TILE_WIDTH * g / abs(JUMP_V0)
@@ -80,7 +84,8 @@ func _ready():
 	velocity = Vector2.ZERO
 	action_buffer_timer = $Action_Buffer_Timer
 	animation_node = $Animations
-	wall_jump_timer = $Wall_Jump_Timer
+	left_wall_jump_timer = $Left_Wall_Jump_Timer
+	right_wall_jump_timer = $Right_Wall_Jump_Timer
 	coyote_jump_node = $Coyote_Jump_Timer
 
 	print("JUMP_V0: ", JUMP_V0)
@@ -191,8 +196,17 @@ func wall_jump():
 		eps = -1
 
 	velocity.x = eps * MAX_SPEED
-	is_wall_jumping = true
-	wall_jump_timer.start(WALL_JUMP_TIMER_DIRATION)
+
+
+	if (is_moving_right):  # va vers la droite
+		is_right_wall_jumping = true
+		right_wall_jump_timer.start()
+
+	elif (is_moving_left):
+		is_left_wall_jumping = true
+		left_wall_jump_timer.start()
+
+
 
 
 func process_action():
@@ -215,12 +229,18 @@ func process_physics(delta: float):
 	process_action()
 
 	acceleration.x = 0
+
 	if (not is_wall_jumping):
 		if (is_moving_left):
 			acceleration.x = -accel_x
-
-		elif (is_moving_right):
+		if (is_moving_right):
 			acceleration.x = accel_x
+
+	if (is_moving_left and (not is_left_wall_jumping and is_right_wall_jumping)):
+		acceleration.x = -accel_x
+
+	if (is_moving_right and (not is_right_wall_jumping and is_left_wall_jumping)):
+		acceleration.x = accel_x
 
 
 	acceleration.y = g 
@@ -250,6 +270,9 @@ func process_physics(delta: float):
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	is_wall_jumping = is_left_wall_jumping or is_right_wall_jumping
+	print(is_wall_jumping)
+
 	process_animations()
 
 	process_inputs()
@@ -267,10 +290,15 @@ func _on_action_buffer_timer_timeout():
 
 
 
-func _on_wall_jump_timer_timeout():
-	is_wall_jumping = false
+func _on_right_wall_jump_timer_timeout():
+	is_right_wall_jumping = false
 
 
 func _on_coyote_jump_timer_timeout():
 	is_coyote_available = false
+
+
+func _on_left_wall_jump_timer_timeout():
+	is_left_wall_jumping = false
+
 
